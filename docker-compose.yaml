@@ -1,0 +1,50 @@
+version: '3.7'
+
+networks:
+  monitoring:
+    external: true
+
+services:
+  # ==========================================
+  # 1. Prometheus
+  # ==========================================
+  prometheus:
+    image: prom/prometheus:v2.37.0
+    container_name: prometheus
+    restart: always
+    volumes:
+      - ./prometheus/data:/prometheus
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus/conf:/etc/prometheus/conf
+    ports:
+      - "19090:9090"
+    networks:
+      - monitoring
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.enable-lifecycle'
+
+  # ==========================================
+  # 2. Grafana
+  # ==========================================
+  grafana:
+    image: swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/rancher/mirrored-grafana-grafana:11.5.5
+    user: "472:472"
+    container_name: grafana
+    restart: always
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - ./grafana/grafana.ini:/var/lib/grafana/grafana.ini
+      - ./grafana/data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/files/grafana-dashboards:/etc/grafana/dashboards
+    ports:
+      - "3000:3000"
+    networks:
+      - monitoring
+    depends_on:
+      - prometheus
+

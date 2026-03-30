@@ -1,0 +1,11 @@
+[
+  {
+    "labels": {
+      "job": "mysql"
+    },
+    "targets": [
+      "xxx:9104"
+    ]
+  }
+]
+

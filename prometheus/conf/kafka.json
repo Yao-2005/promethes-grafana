@@ -1,0 +1,11 @@
+[
+  {
+    "labels": {
+      "job": "kafka"
+    },
+    "targets": [
+      "xxx:9308"
+    ]
+  }
+]
+

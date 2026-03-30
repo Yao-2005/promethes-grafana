@@ -1,0 +1,89 @@
+# Prometheus主配置文件模板（Jinja2格式）
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - "conf/rules/*.yml"
+
+
+# 数据抓取配置
+scrape_configs:
+  # 监控Prometheus自身
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+        labels:
+          service: 'prometheus-monitoring'
+
+  # 节点监控（自动发现所有主机）
+  - job_name: 'node'
+    scrape_interval: 15s
+    file_sd_configs:
+    - files:
+      - 'conf/node.json'
+
+  - job_name: 'kafka'
+    scrape_interval: 15s
+    file_sd_configs:
+    - files:
+      - 'conf/kafka.json'
+
+  - job_name: 'redis'
+    scrape_interval: 15s
+    file_sd_configs:
+    - files:
+      - 'conf/redis.json'
+
+  - job_name: 'mysql'
+    scrape_interval: 15s
+    file_sd_configs:
+    - files:
+      - 'conf/mysql.json'
+
+  - job_name: 'mongo'
+    scrape_interval: 15s
+    file_sd_configs:
+    - files:
+      - 'conf/mongo.json'
+
+  - job_name: 'es'
+    scrape_interval: 15s
+    file_sd_configs:
+    - files:
+      - 'conf/es.json'
+
+  - job_name: 'blackbox'
+    metrics_path: /probe
+    params:
+      module: [http_2xx]  # 模块对应 blackbox.yml
+    static_configs:
+      - targets:
+        - https://example.cn
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115  # blackbox安装在哪台机器
+
+  - job_name: blackbox_tcp
+    metrics_path: /probe
+    params:
+      module: [tcp_connect]
+    static_configs:
+      - targets:
+        - 192.168.x.x:3306
+        - 192.168.x.x:6379
+        - 192.168.x.x:9092
+        - 192.168.x.x:9200
+
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox-exporter:9115 # Blackbox exporter.
+
