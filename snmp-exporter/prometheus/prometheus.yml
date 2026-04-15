@@ -1,0 +1,30 @@
+global:
+  scrape_interval: 60s      # SNMP 采集间隔（建议不低于 30s，避免给设备造成过大负担）
+  evaluation_interval: 60s
+
+scrape_configs:
+  # 采集 snmp-exporter 自身的运行状态指标
+  - job_name: 'snmp-exporter'
+    static_configs:
+      - targets: ['snmp-exporter:9116']
+
+  # 通过网络设备采集 SNMP 指标
+  - job_name: 'snmp-network-devices'
+    static_configs:
+      # 在这里添加您要监控的 SNMP 设备 IP
+      - targets:
+        - '192.168.1.1'      # 示例：核心交换机
+        - '192.168.1.2'      # 示例：接入交换机
+        # 更多设备按相同格式添加
+        labels:
+          module: 'if_mib'    # 使用 if_mib 模块采集接口指标
+    metrics_path: /snmp
+    params:
+      module: ['if_mib']      # 指定使用的采集模块
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: snmp-exporter:9116

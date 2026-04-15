@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  snmp-exporter:
+    image: swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/prom/snmp-exporter:v0.29.0
+    container_name: snmp-exporter
+    restart: unless-stopped
+    ports:
+      - "9116:9116"
+    volumes:
+      - ./snmp.yml:/etc/snmp_exporter/snmp.yml:ro
+    command:
+      - '--config.file=/etc/snmp_exporter/snmp.yml'
+    networks:
+      - monitoring
+
+  prometheus:
+    image: swr.cn-north-4.myhuaweicloud.com/ddn-k8s/docker.io/prom/prometheus:v3.9.1
+    container_name: prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus/prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.retention.time=90d'
+    depends_on:
+      - snmp-exporter
+    networks:
+      - monitoring
+
+networks:
+  monitoring:
+    driver: bridge
